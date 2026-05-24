@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VitalFit Store – Health & Fitness</title>
+  <link rel="stylesheet" href="store.css">
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">VitalFit</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#categories">Shop</a>
+        <a href="#products">Products</a>
+        <a href="#about">About</a>
+      </nav>
+      <div class="nav-actions">
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="Search products…" />
+          <span class="search-icon">🔍</span>
+        </div>
+        <button class="cart-btn" id="cartToggle">
+          🛒 Cart <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <p class="hero-eyebrow">New Arrivals 2026</p>
+      <h1>Fuel Your <span class="accent">Best Performance</span></h1>
+      <p class="hero-sub">Premium supplements, equipment, and apparel for every fitness goal.</p>
+      <a href="#products" class="btn-primary">Shop Now</a>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-badge">
+        <span class="badge-number">500+</span>
+        <span class="badge-label">Products</span>
+      </div>
+      <div class="hero-circles">
+        <div class="circle c1"></div>
+        <div class="circle c2"></div>
+        <div class="circle c3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="categories" id="categories">
+    <div class="container">
+      <h2 class="section-title">Shop by Category</h2>
+      <div class="category-grid">
+        <button class="cat-card active" data-filter="all">
+          <span class="cat-icon">🏪</span>
+          <span>All</span>
+        </button>
+        <button class="cat-card" data-filter="supplements">
+          <span class="cat-icon">💊</span>
+          <span>Supplements</span>
+        </button>
+        <button class="cat-card" data-filter="equipment">
+          <span class="cat-icon">🏋️</span>
+          <span>Equipment</span>
+        </button>
+        <button class="cat-card" data-filter="apparel">
+          <span class="cat-icon">👕</span>
+          <span>Apparel</span>
+        </button>
+        <button class="cat-card" data-filter="nutrition">
+          <span class="cat-icon">🥗</span>
+          <span>Nutrition</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="products-section" id="products">
+    <div class="container">
+      <div class="products-header">
+        <h2 class="section-title">Our Products</h2>
+        <select id="sortSelect" class="sort-select">
+          <option value="default">Sort: Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name">Name: A–Z</option>
+        </select>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <!-- BANNER -->
+  <section class="promo-banner">
+    <div class="container">
+      <div class="promo-inner">
+        <div>
+          <h3>Get 20% Off Your First Order</h3>
+          <p>Use code <strong>VITAL20</strong> at checkout</p>
+        </div>
+        <a href="#products" class="btn-outline">Claim Offer</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-text">
+          <h2>Why VitalFit?</h2>
+          <p>We source only the highest-quality products to support your fitness journey — from beginner to elite athlete.</p>
+          <div class="perks">
+            <div class="perk"><span>✅</span> Lab-tested supplements</div>
+            <div class="perk"><span>🚚</span> Free shipping over $50</div>
+            <div class="perk"><span>🔄</span> 30-day easy returns</div>
+            <div class="perk"><span>⭐</span> 50k+ happy customers</div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat"><span class="stat-num">98%</span><span class="stat-label">Customer Satisfaction</span></div>
+          <div class="stat"><span class="stat-num">500+</span><span class="stat-label">Products</span></div>
+          <div class="stat"><span class="stat-num">50k+</span><span class="stat-label">Happy Customers</span></div>
+          <div class="stat"><span class="stat-num">8yrs</span><span class="stat-label">In Business</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="logo"><span class="logo-icon">⚡</span><span class="logo-text">VitalFit</span></div>
+          <p class="footer-tagline">Fuel your best performance.</p>
+        </div>
+        <div>
+          <h4>Shop</h4>
+          <ul>
+            <li><a href="#products">Supplements</a></li>
+            <li><a href="#products">Equipment</a></li>
+            <li><a href="#products">Apparel</a></li>
+            <li><a href="#products">Nutrition</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Help</h4>
+          <ul>
+            <li><a href="#">Shipping Info</a></li>
+            <li><a href="#">Returns</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Contact Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Follow Us</h4>
+          <div class="social-links">
+            <a href="#">Instagram</a>
+            <a href="#">YouTube</a>
+            <a href="#">TikTok</a>
+          </div>
+        </div>
+      </div>
+      <p class="footer-copy">© 2026 VitalFit Store. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- CART SIDEBAR -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>Your Cart</h3>
+      <button class="close-cart" id="closeCart">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <p class="empty-cart">Your cart is empty.</p>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-total">
+        <span>Total:</span>
+        <span id="cartTotal">$0.00</span>
+      </div>
+      <button class="btn-primary full-width" id="checkoutBtn">Checkout</button>
+    </div>
+  </aside>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="store.js"></script>
+</body>
+</html>
