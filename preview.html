@@ -347,6 +347,97 @@ ul { list-style: none; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+.auth-btn {
+  background: transparent;
+  border: 2px solid var(--green);
+  color: var(--green);
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.auth-btn:hover { background: var(--green); color: var(--white); }
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--dark);
+}
+.logout-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.logout-btn:hover { background: #fef2f2; }
+
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px);
+  transition: transform 0.25s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: none;
+  font-size: 1.1rem; cursor: pointer;
+  color: var(--mid); padding: 4px 8px;
+  border-radius: 6px; transition: background 0.2s;
+}
+.modal-close:hover { background: var(--border); }
+
+.modal-tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+.modal-tab {
+  flex: 1; padding: 10px; border: none;
+  background: var(--light); border-radius: 8px;
+  font-weight: 600; cursor: pointer; font-size: 0.95rem;
+  color: var(--mid); transition: all 0.2s;
+}
+.modal-tab.active { background: var(--green); color: var(--white); }
+
+.form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--dark); }
+.form-input {
+  width: 100%; padding: 10px 14px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 0.95rem; outline: none; margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--green); }
+.form-error { color: #ef4444; font-size: 0.85rem; min-height: 18px; margin-bottom: 12px; }
+
+.product-grid .loading {
+  grid-column: 1/-1; text-align: center;
+  padding: 60px; color: var(--mid); font-size: 1.1rem;
+}
+
 @media (max-width: 900px) {
   .about-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
@@ -383,6 +474,11 @@ ul { list-style: none; }
         <div class="search-wrap">
           <input type="text" id="searchInput" placeholder="Search products…" />
           <span class="search-icon">🔍</span>
+        </div>
+        <button class="auth-btn" id="authBtn">Sign In</button>
+        <div class="user-chip" id="userChip" style="display:none">
+          <span id="userName"></span>
+          <button class="logout-btn" id="logoutBtn">Log out</button>
         </div>
         <button class="cart-btn" id="cartToggle">
           🛒 Cart <span class="cart-count" id="cartCount">0</span>
@@ -512,6 +608,33 @@ ul { list-style: none; }
     </div>
   </footer>
 
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authOverlay">
+    <div class="modal" id="authModal">
+      <button class="modal-close" id="closeAuth">✕</button>
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="login">Sign In</button>
+        <button class="modal-tab" data-tab="register">Register</button>
+      </div>
+      <form id="authForm">
+        <div id="nameField" style="display:none">
+          <label class="form-label">Name</label>
+          <input class="form-input" id="authName" type="text" placeholder="Your name" />
+        </div>
+        <div>
+          <label class="form-label">Email</label>
+          <input class="form-input" id="authEmail" type="email" placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label class="form-label">Password</label>
+          <input class="form-input" id="authPassword" type="password" placeholder="Min 6 characters" required />
+        </div>
+        <p class="form-error" id="authError"></p>
+        <button type="submit" class="btn-primary full-width" id="authSubmit">Sign In</button>
+      </form>
+    </div>
+  </div>
+
   <div class="cart-overlay" id="cartOverlay"></div>
   <aside class="cart-sidebar" id="cartSidebar">
     <div class="cart-header">
@@ -533,38 +656,79 @@ ul { list-style: none; }
   <div class="toast" id="toast"></div>
 
   <script>
-const products = [
-  { id: 1,  name: 'Whey Protein Isolate', category: 'supplements', price: 54.99, oldPrice: 69.99, emoji: '🥤', badge: 'Best Seller', desc: 'Ultra-pure 90% protein isolate. 25g protein per serving, zero sugar.' },
-  { id: 2,  name: 'Creatine Monohydrate', category: 'supplements', price: 24.99, oldPrice: null,  emoji: '⚗️', badge: 'New',         desc: 'Micronised for maximum absorption. 5g pure creatine per scoop.' },
-  { id: 3,  name: 'Pre-Workout Boost',    category: 'supplements', price: 39.99, oldPrice: 49.99, emoji: '⚡', badge: 'Sale',        desc: 'Energy, focus, and endurance formula with 200mg caffeine.' },
-  { id: 4,  name: 'BCAA Recovery',        category: 'supplements', price: 29.99, oldPrice: null,  emoji: '💊', badge: null,          desc: '2:1:1 BCAA ratio to support muscle recovery and reduce soreness.' },
-  { id: 5,  name: 'Omega-3 Fish Oil',     category: 'supplements', price: 18.99, oldPrice: null,  emoji: '🐟', badge: null,          desc: 'High-potency EPA & DHA from wild-caught fish. 90 softgels.' },
-  { id: 6,  name: 'Multivitamin Sport',   category: 'supplements', price: 22.99, oldPrice: null,  emoji: '🌿', badge: null,          desc: 'Complete vitamin and mineral complex designed for active people.' },
-  { id: 7,  name: 'Adjustable Dumbbells', category: 'equipment',   price: 189.99,oldPrice: 229.99,emoji: '🏋️', badge: 'Sale',       desc: 'Replaces 15 sets of weights. Quick-lock dial system. 5–52.5 lbs.' },
-  { id: 8,  name: 'Resistance Band Set',  category: 'equipment',   price: 34.99, oldPrice: null,  emoji: '🔵', badge: 'Best Seller', desc: '5 bands from 10–50 lbs resistance. Door anchor and handles included.' },
-  { id: 9,  name: 'Foam Roller Pro',      category: 'equipment',   price: 44.99, oldPrice: null,  emoji: '🔴', badge: null,          desc: 'High-density foam for deep tissue massage and muscle recovery.' },
-  { id: 10, name: 'Pull-Up Bar',          category: 'equipment',   price: 49.99, oldPrice: 59.99, emoji: '🏗️', badge: null,          desc: 'No-screw doorframe mount. Holds up to 300 lbs. Multi-grip.' },
-  { id: 11, name: 'Yoga Mat Premium',     category: 'equipment',   price: 59.99, oldPrice: null,  emoji: '🧘', badge: 'New',         desc: 'Non-slip 6mm thick TPE mat with alignment lines. Eco-friendly.' },
-  { id: 12, name: 'Jump Rope Speed',      category: 'equipment',   price: 19.99, oldPrice: null,  emoji: '🪢', badge: null,          desc: 'Ball-bearing handles for blazing fast rotations. Adjustable length.' },
-  { id: 13, name: 'Pro Training Tee',     category: 'apparel',     price: 34.99, oldPrice: null,  emoji: '👕', badge: 'New',         desc: 'Moisture-wicking polyester blend. 4-way stretch. Anti-odour.' },
-  { id: 14, name: 'Compression Leggings', category: 'apparel',     price: 64.99, oldPrice: 79.99, emoji: '🩱', badge: 'Sale',        desc: 'Graduated compression for improved circulation during workouts.' },
-  { id: 15, name: 'Training Shorts',      category: 'apparel',     price: 29.99, oldPrice: null,  emoji: '🩲', badge: null,          desc: 'Lightweight quick-dry fabric with secure zip pockets.' },
-  { id: 16, name: 'Sports Hoodie',        category: 'apparel',     price: 69.99, oldPrice: 89.99, emoji: '🧥', badge: 'Sale',        desc: 'Fleece-lined athletic hoodie with kangaroo pocket. Machine washable.' },
-  { id: 17, name: 'Grip Gloves',          category: 'apparel',     price: 24.99, oldPrice: null,  emoji: '🧤', badge: null,          desc: 'Padded palms with wrist wrap support. Open-finger design.' },
-  { id: 18, name: 'Meal Prep Kit',        category: 'nutrition',   price: 39.99, oldPrice: null,  emoji: '🥗', badge: 'Best Seller', desc: '7 BPA-free containers with macro-tracking lids. Microwave safe.' },
-  { id: 19, name: 'Protein Bars (12pk)',  category: 'nutrition',   price: 27.99, oldPrice: 34.99, emoji: '🍫', badge: 'Sale',        desc: '20g protein, <5g sugar per bar. 6 flavours included.' },
-  { id: 20, name: 'Shaker Bottle',        category: 'nutrition',   price: 14.99, oldPrice: null,  emoji: '🧉', badge: null,          desc: 'Leak-proof BlenderBall wire whisk. 28oz BPA-free.' },
-  { id: 21, name: 'Electrolyte Powder',   category: 'nutrition',   price: 32.99, oldPrice: null,  emoji: '⚗️', badge: 'New',         desc: 'Zero-sugar hydration with sodium, potassium, and magnesium.' },
-  { id: 22, name: 'Healthy Snack Box',    category: 'nutrition',   price: 44.99, oldPrice: null,  emoji: '📦', badge: null,          desc: '20 high-protein, low-sugar snacks curated by our nutritionists.' },
-];
+/* ── Config ── */
+const API = 'http://localhost:5000/api';
 
+/* ── State ── */
+let products = [];
 let cart = [];
+let token = localStorage.getItem('vf_token');
+let currentUser = JSON.parse(localStorage.getItem('vf_user') || 'null');
 let activeFilter = 'all';
 let activeSort = 'default';
 let searchQuery = '';
+let searchTimer = null;
+let authMode = 'login'; // 'login' | 'register'
 
-function getFilteredProducts() {
-  let list = [...products];
+/* ── API helpers ── */
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+});
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, { headers: authHeaders(), ...opts });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+/* ── Products ── */
+async function loadProducts() {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = '<p class="loading">Loading products…</p>';
+  try {
+    const params = new URLSearchParams();
+    if (activeFilter !== 'all') params.set('category', activeFilter);
+    if (searchQuery) params.set('search', searchQuery);
+    if (activeSort !== 'default') params.set('sort', activeSort);
+
+    const { ok, data } = await apiFetch(`/products?${params}`);
+    if (ok) {
+      products = data.products || [];
+      renderProducts();
+      return;
+    }
+  } catch { /* fall through to static fallback */ }
+  useFallbackProducts();
+}
+
+const FALLBACK = [
+  { _id:'1',  name:'Whey Protein Isolate', category:'supplements', price:54.99, oldPrice:69.99, emoji:'🥤', badge:'Best Seller', desc:'Ultra-pure 90% protein isolate. 25g protein per serving, zero sugar.' },
+  { _id:'2',  name:'Creatine Monohydrate', category:'supplements', price:24.99, oldPrice:null,  emoji:'⚗️', badge:'New',         desc:'Micronised for maximum absorption. 5g pure creatine per scoop.' },
+  { _id:'3',  name:'Pre-Workout Boost',    category:'supplements', price:39.99, oldPrice:49.99, emoji:'⚡', badge:'Sale',        desc:'Energy, focus, and endurance formula with 200mg caffeine.' },
+  { _id:'4',  name:'BCAA Recovery',        category:'supplements', price:29.99, oldPrice:null,  emoji:'💊', badge:null,          desc:'2:1:1 BCAA ratio to support muscle recovery and reduce soreness.' },
+  { _id:'5',  name:'Omega-3 Fish Oil',     category:'supplements', price:18.99, oldPrice:null,  emoji:'🐟', badge:null,          desc:'High-potency EPA & DHA from wild-caught fish. 90 softgels.' },
+  { _id:'6',  name:'Multivitamin Sport',   category:'supplements', price:22.99, oldPrice:null,  emoji:'🌿', badge:null,          desc:'Complete vitamin and mineral complex designed for active people.' },
+  { _id:'7',  name:'Adjustable Dumbbells', category:'equipment',   price:189.99,oldPrice:229.99,emoji:'🏋️',badge:'Sale',        desc:'Replaces 15 sets of weights. Quick-lock dial system. 5–52.5 lbs.' },
+  { _id:'8',  name:'Resistance Band Set',  category:'equipment',   price:34.99, oldPrice:null,  emoji:'🔵', badge:'Best Seller', desc:'5 bands from 10–50 lbs resistance. Door anchor and handles included.' },
+  { _id:'9',  name:'Foam Roller Pro',      category:'equipment',   price:44.99, oldPrice:null,  emoji:'🔴', badge:null,          desc:'High-density foam for deep tissue massage and muscle recovery.' },
+  { _id:'10', name:'Pull-Up Bar',          category:'equipment',   price:49.99, oldPrice:59.99, emoji:'🏗️',badge:null,          desc:'No-screw doorframe mount. Holds up to 300 lbs. Multi-grip.' },
+  { _id:'11', name:'Yoga Mat Premium',     category:'equipment',   price:59.99, oldPrice:null,  emoji:'🧘', badge:'New',         desc:'Non-slip 6mm thick TPE mat with alignment lines. Eco-friendly.' },
+  { _id:'12', name:'Jump Rope Speed',      category:'equipment',   price:19.99, oldPrice:null,  emoji:'🪢', badge:null,          desc:'Ball-bearing handles for blazing fast rotations. Adjustable length.' },
+  { _id:'13', name:'Pro Training Tee',     category:'apparel',     price:34.99, oldPrice:null,  emoji:'👕', badge:'New',         desc:'Moisture-wicking polyester blend. 4-way stretch. Anti-odour.' },
+  { _id:'14', name:'Compression Leggings', category:'apparel',     price:64.99, oldPrice:79.99, emoji:'🩱', badge:'Sale',        desc:'Graduated compression for improved circulation during workouts.' },
+  { _id:'15', name:'Training Shorts',      category:'apparel',     price:29.99, oldPrice:null,  emoji:'🩲', badge:null,          desc:'Lightweight quick-dry fabric with secure zip pockets.' },
+  { _id:'16', name:'Sports Hoodie',        category:'apparel',     price:69.99, oldPrice:89.99, emoji:'🧥', badge:'Sale',        desc:'Fleece-lined athletic hoodie with kangaroo pocket. Machine washable.' },
+  { _id:'17', name:'Grip Gloves',          category:'apparel',     price:24.99, oldPrice:null,  emoji:'🧤', badge:null,          desc:'Padded palms with wrist wrap support. Open-finger design.' },
+  { _id:'18', name:'Meal Prep Kit',        category:'nutrition',   price:39.99, oldPrice:null,  emoji:'🥗', badge:'Best Seller', desc:'7 BPA-free containers with macro-tracking lids. Microwave safe.' },
+  { _id:'19', name:'Protein Bars (12pk)',  category:'nutrition',   price:27.99, oldPrice:34.99, emoji:'🍫', badge:'Sale',        desc:'20g protein, <5g sugar per bar. 6 flavours included.' },
+  { _id:'20', name:'Shaker Bottle',        category:'nutrition',   price:14.99, oldPrice:null,  emoji:'🧉', badge:null,          desc:'Leak-proof BlenderBall wire whisk. 28oz BPA-free.' },
+  { _id:'21', name:'Electrolyte Powder',   category:'nutrition',   price:32.99, oldPrice:null,  emoji:'⚗️', badge:'New',         desc:'Zero-sugar hydration with sodium, potassium, and magnesium.' },
+  { _id:'22', name:'Healthy Snack Box',    category:'nutrition',   price:44.99, oldPrice:null,  emoji:'📦', badge:null,          desc:'20 high-protein, low-sugar snacks curated by our nutritionists.' },
+];
+
+function useFallbackProducts() {
+  let list = [...FALLBACK];
   if (activeFilter !== 'all') list = list.filter(p => p.category === activeFilter);
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
@@ -573,17 +737,17 @@ function getFilteredProducts() {
   if (activeSort === 'price-asc') list.sort((a, b) => a.price - b.price);
   else if (activeSort === 'price-desc') list.sort((a, b) => b.price - a.price);
   else if (activeSort === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
-  return list;
+  products = list;
+  renderProducts();
 }
 
 function renderProducts() {
   const grid = document.getElementById('productGrid');
-  const list = getFilteredProducts();
-  if (list.length === 0) {
+  if (products.length === 0) {
     grid.innerHTML = '<p class="no-results">No products found. Try a different search or filter.</p>';
     return;
   }
-  grid.innerHTML = list.map(p => `
+  grid.innerHTML = products.map(p => `
     <div class="product-card">
       <div class="product-img">
         ${p.badge ? `<span class="product-badge${p.badge === 'Sale' ? ' sale' : ''}">${p.badge}</span>` : ''}
@@ -598,117 +762,252 @@ function renderProducts() {
             <span class="price">$${p.price.toFixed(2)}</span>
             ${p.oldPrice ? `<span class="price-old">$${p.oldPrice.toFixed(2)}</span>` : ''}
           </div>
-          <button class="add-to-cart" onclick="addToCart(${p.id})">+ Add</button>
+          <button class="add-to-cart" onclick="addToCart('${p._id}', '${p.name.replace(/'/g,"\\'")}', ${p.price}, '${p.emoji}')">+ Add</button>
         </div>
       </div>
     </div>
   `).join('');
 }
 
-function addToCart(id) {
-  const product = products.find(p => p.id === id);
-  const existing = cart.find(i => i.id === id);
+/* ── Cart ── */
+async function addToCart(productId, name, price, emoji) {
+  if (token) {
+    const { ok, data } = await apiFetch('/cart', {
+      method: 'POST',
+      body: JSON.stringify({ productId, qty: 1 }),
+    });
+    if (ok) { cart = data.cart; updateCartUI(); showToast(`${name} added to cart!`); return; }
+    if (data.message) { showToast(data.message); return; }
+  }
+  // Local cart fallback (no login required)
+  const existing = cart.find(i => i.productId === productId);
   if (existing) existing.qty++;
-  else cart.push({ ...product, qty: 1 });
+  else cart.push({ productId, name, price, emoji, qty: 1 });
   updateCartUI();
-  showToast(`${product.name} added to cart!`);
+  showToast(`${name} added to cart!`);
 }
 
-function removeFromCart(id) {
-  cart = cart.filter(i => i.id !== id);
+async function removeFromCart(productId) {
+  if (token) {
+    const { ok, data } = await apiFetch(`/cart/${productId}`, { method: 'DELETE' });
+    if (ok) { cart = data.cart; updateCartUI(); return; }
+  }
+  cart = cart.filter(i => i.productId !== productId);
   updateCartUI();
 }
 
-function changeQty(id, delta) {
-  const item = cart.find(i => i.id === id);
+async function changeQty(productId, delta) {
+  const item = cart.find(i => i.productId === productId);
   if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) removeFromCart(id);
-  else updateCartUI();
+  const newQty = item.qty + delta;
+  if (newQty <= 0) { removeFromCart(productId); return; }
+  if (token) {
+    const { ok, data } = await apiFetch(`/cart/${productId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ qty: newQty }),
+    });
+    if (ok) { cart = data.cart; updateCartUI(); return; }
+  }
+  item.qty = newQty;
+  updateCartUI();
+}
+
+async function loadCart() {
+  if (!token) return;
+  const { ok, data } = await apiFetch('/cart');
+  if (ok) { cart = data.cart; updateCartUI(); }
 }
 
 function updateCartUI() {
-  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-  const count = cart.reduce((sum, i) => sum + i.qty, 0);
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = cart.reduce((s, i) => s + i.qty, 0);
   document.getElementById('cartCount').textContent = count;
-  const cartItems = document.getElementById('cartItems');
+  const cartItemsEl = document.getElementById('cartItems');
   const cartFooter = document.getElementById('cartFooter');
   if (cart.length === 0) {
-    cartItems.innerHTML = '<p class="empty-cart">Your cart is empty.</p>';
+    cartItemsEl.innerHTML = '<p class="empty-cart">Your cart is empty.</p>';
     cartFooter.style.display = 'none';
     return;
   }
   cartFooter.style.display = 'block';
   document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
-  cartItems.innerHTML = cart.map(item => `
+  cartItemsEl.innerHTML = cart.map(item => `
     <div class="cart-item">
       <div class="cart-item-img">${item.emoji}</div>
       <div class="cart-item-info">
         <div class="cart-item-name">${item.name}</div>
         <div class="cart-item-price">$${item.price.toFixed(2)}</div>
         <div class="cart-item-controls">
-          <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+          <button class="qty-btn" onclick="changeQty('${item.productId}',-1)">−</button>
           <span class="qty-display">${item.qty}</span>
-          <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
-          <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
+          <button class="qty-btn" onclick="changeQty('${item.productId}',1)">+</button>
+          <button class="remove-btn" onclick="removeFromCart('${item.productId}')">Remove</button>
         </div>
       </div>
     </div>
   `).join('');
 }
 
+/* ── Checkout ── */
+async function checkout() {
+  if (cart.length === 0) return;
+  if (token) {
+    const { ok, data } = await apiFetch('/orders', {
+      method: 'POST',
+      body: JSON.stringify({ items: cart.map(i => ({ productId: i.productId, qty: i.qty })) }),
+    });
+    if (ok) {
+      // Clear server cart
+      await apiFetch('/cart', { method: 'DELETE' });
+      cart = [];
+      updateCartUI();
+      closeCart();
+      showToast('Order placed! Thank you for shopping with VitalFit 🎉');
+      return;
+    }
+    showToast(data.message || 'Order failed');
+    return;
+  }
+  // Guest checkout
+  cart = [];
+  updateCartUI();
+  closeCart();
+  showToast('Order placed! Thank you for shopping with VitalFit 🎉');
+}
+
+/* ── Auth ── */
+function setAuthMode(mode) {
+  authMode = mode;
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === mode));
+  document.getElementById('nameField').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('authSubmit').textContent = mode === 'login' ? 'Sign In' : 'Create Account';
+  document.getElementById('authError').textContent = '';
+}
+
+function openAuthModal() {
+  document.getElementById('authOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeAuthModal() {
+  document.getElementById('authOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  document.getElementById('authError').textContent = '';
+}
+
+function updateAuthUI() {
+  const btn = document.getElementById('authBtn');
+  const chip = document.getElementById('userChip');
+  if (currentUser) {
+    btn.style.display = 'none';
+    chip.style.display = 'flex';
+    document.getElementById('userName').textContent = currentUser.name.split(' ')[0];
+  } else {
+    btn.style.display = '';
+    chip.style.display = 'none';
+  }
+}
+
+async function handleAuth(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const name = document.getElementById('authName').value.trim();
+  const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
+  const body = authMode === 'login' ? { email, password } : { name, email, password };
+  try {
+    const { ok, data } = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(body) });
+    if (ok) {
+      token = data.token;
+      currentUser = data.user;
+      localStorage.setItem('vf_token', token);
+      localStorage.setItem('vf_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      closeAuthModal();
+      await loadCart();
+      showToast(`Welcome${authMode === 'register' ? '' : ' back'}, ${currentUser.name.split(' ')[0]}!`);
+    } else {
+      errEl.textContent = data.message || 'Something went wrong';
+    }
+  } catch {
+    errEl.textContent = 'Could not reach server — check backend is running';
+  }
+}
+
+function logout() {
+  token = null;
+  currentUser = null;
+  cart = [];
+  localStorage.removeItem('vf_token');
+  localStorage.removeItem('vf_user');
+  updateAuthUI();
+  updateCartUI();
+  showToast('Signed out');
+}
+
+/* ── Cart sidebar ── */
 function openCart() {
   document.getElementById('cartSidebar').classList.add('open');
   document.getElementById('cartOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-
 function closeCart() {
   document.getElementById('cartSidebar').classList.remove('open');
   document.getElementById('cartOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
 
+/* ── Toast ── */
 let toastTimer;
 function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
   toast.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
+/* ── Event listeners ── */
 document.querySelectorAll('.cat-card').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.cat-card').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeFilter = btn.dataset.filter;
-    renderProducts();
+    loadProducts();
   });
 });
 
 document.getElementById('sortSelect').addEventListener('change', e => {
   activeSort = e.target.value;
-  renderProducts();
+  loadProducts();
 });
 
 document.getElementById('searchInput').addEventListener('input', e => {
   searchQuery = e.target.value.trim();
-  renderProducts();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadProducts, 350);
 });
 
 document.getElementById('cartToggle').addEventListener('click', openCart);
 document.getElementById('closeCart').addEventListener('click', closeCart);
 document.getElementById('cartOverlay').addEventListener('click', closeCart);
+document.getElementById('checkoutBtn').addEventListener('click', checkout);
 
-document.getElementById('checkoutBtn').addEventListener('click', () => {
-  cart = [];
-  updateCartUI();
-  closeCart();
-  showToast('Order placed! Thank you for shopping with VitalFit 🎉');
+document.getElementById('authBtn').addEventListener('click', openAuthModal);
+document.getElementById('closeAuth').addEventListener('click', closeAuthModal);
+document.getElementById('authOverlay').addEventListener('click', e => { if (e.target === document.getElementById('authOverlay')) closeAuthModal(); });
+document.getElementById('authForm').addEventListener('submit', handleAuth);
+document.getElementById('logoutBtn').addEventListener('click', logout);
+
+document.querySelectorAll('.modal-tab').forEach(tab => {
+  tab.addEventListener('click', () => setAuthMode(tab.dataset.tab));
 });
 
-renderProducts();
+/* ── Init ── */
+updateAuthUI();
+loadCart();
+loadProducts();
   </script>
 </body>
 </html>
